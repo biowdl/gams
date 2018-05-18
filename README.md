@@ -26,7 +26,14 @@ Locally:
 $ java -jar /path/to/cromwell.<version>.jar run pipeline.wdl -i inputs.json 
 ```
 
-On a cluster (e.g. LUMC's SHARK):
+On a cluster:
+```
+$ java -Dconfig.file=/path/to/cluster.config \
+  -jar /path/to/cromwell.<version>.jar \
+  run pipeline.wdl -i inputs.json 
+```
+
+For shark users:
 ```
 $ module load cromwell/31
 $ java -Dconfig.file=$CROMWELL_SHARK_CONFIG -jar $CROMWELL_JAR run pipeline.wdl -i INPUTS.json
