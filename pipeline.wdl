@@ -26,14 +26,15 @@ workflow pipeline {
     String outputDir
 
     #  Reading the samples from the sample config files
-    call biopet.SampleConfig as samplesConfigs {
+    call biopet.SampleConfig as config {
         input:
-            inputFiles = sampleConfigFiles
+            inputFiles = sampleConfigFiles,
+            keyFilePath = outputDir + "/config.keys"
     }
 
     # Do the jobs that should be executed per sample.
-    # Modify sample.wdl to change what is happening per sample
-    scatter (sampleId in samplesConfigs.keys) {
+    # Modify sample.wdl to change what is happening per sampleq
+    scatter (sampleId in read_lines(config.keysFile)) {
         call sampleWorkflow.sample as sample {
             input:
                 sampleConfigs = sampleConfigFiles,
@@ -46,6 +47,6 @@ workflow pipeline {
     # below this line.
 
     output {
-        Array[String] samples = samplesConfigs.keys
+        Array[String] samples = read_lines(config.keysFile)
     }
 }

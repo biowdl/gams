@@ -1,0 +1,6 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: linux-64
+fastqc=0.11.7=pl5.22.0_1
+openjdk=8.0.121=1
+perl=5.22.0.1=0
