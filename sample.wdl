@@ -100,4 +100,4 @@ workflow sample {
             inputIsCompressed=true,
             indexPrefix=indexPrefix
     }
-}}
+}
