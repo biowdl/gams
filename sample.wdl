@@ -100,6 +100,7 @@ workflow sample {
                 onlyUnique = true
         }
     }
+<<<<<<< HEAD
 
     output {
         File centrifugeClassifications = centrifugeClassify.classifiedReads
@@ -110,3 +111,6 @@ workflow sample {
 
 
 }
+=======
+}
+>>>>>>> dbbda9c3ce78f19d98762aaefa8b3de9318b5833
