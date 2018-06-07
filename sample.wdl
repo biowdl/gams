@@ -18,17 +18,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import "readgroup.wdl" as readgroupWorkflow
 import "library.wdl" as libraryWorkflow
 import "tasks/biopet.wdl" as biopet
-import "tasks/centrifuge.wdl" as centrifuge
 import "tasks/common.wdl" as common
+import "tasks/centrifuge.wdl" as centrifuge
 
 workflow sample {
     Array[File] sampleConfigs
     String sampleId
     String outputDir
+    Boolean combineReads
     String indexPrefix
+    Int? assignments = 5
 
     # Get the library configuration
     call biopet.SampleConfig as config {
@@ -41,7 +42,6 @@ workflow sample {
     }
 
     # Do the work per library.
-    # Modify library.wdl to change what is happening per library.
     scatter (libraryId in read_lines(config.keysFile)) {
         if (libraryId != "") {
             call libraryWorkflow.library as library {
@@ -54,50 +54,59 @@ workflow sample {
         }
     }
 
-    # Do the per sample work and the work over all the library
-    # results below this line.
+    # This handles the absence of extended fragments when flash is not run
+    # The QC'ed pairs are then selected as input for centrifuge
+    Array[File]? None # Replace this as soon as there is a literal None
+
+    call centrifuge.Classify as centrifugeClassify {
+            input:
+                outputDir = outputDir + "/centrifuge",
+                indexPrefix = indexPrefix,
+                assignments = assignments,
+
+                unpairedReads= if length(select_first(library.libExtendedFrags)) > 0
+                                then flatten(select_all(library.libExtendedFrags))
+                                else None,
+
+                read1 = if (combineReads == true)
+                        then flatten(select_all(library.libNotCombinedR1))
+                        else flatten(select_all(library.libCleanR1)),
+
+                read2 = if (combineReads == true)
+                        then flatten(select_all(library.libNotCombinedR2))
+                        else flatten(select_all(library.libCleanR2))
+
+            }
+
+    # Generate the k-report
+    call centrifuge.Kreport as centrifugeKreport {
+        input:
+            centrifugeOut = centrifugeClassify.classifiedReads,
+            outputDir = outputDir + "/centrifuge",
+            indexPrefix = indexPrefix,
+            inputIsCompressed = true
+
+    }
+
+    # Run the unique kreport generation when the no. of classifications is other than 1
+    if (assignments != 1) {
+        call centrifuge.Kreport as centrifugeKreportUnique {
+            input:
+                centrifugeOut = centrifugeClassify.classifiedReads,
+                outputDir = outputDir + "/centrifuge",
+                indexPrefix = indexPrefix,
+                inputIsCompressed = true,
+                prefix = "centrifuge_unique",
+                onlyUnique = true
+        }
+    }
 
     output {
-        Array[String] libraries = read_lines(config.keysFile)
-        }
-
-    call common.concatenateTextFiles as catFrags {
-        input:
-            fileList = select_first(library.extFrags),
-            combinedFilePath = outputDir + "/extendedFrags.fastq.gz",
-            unzip=true,
-            zip=true
+        File centrifugeClassifications = centrifugeClassify.classifiedReads
+        File centrifugeReport = centrifugeClassify.reportFile
+        File kreport = centrifugeKreport.kreport
+        File? kreportUnique = centrifugeKreportUnique.kreport
     }
 
-    call common.concatenateTextFiles as catR1 {
-        input:
-            fileList = select_first(library.notCombR1),
-            combinedFilePath = outputDir + "/notCombined_R1.fastq.gz",
-            unzip=true,
-            zip=true
-    }
 
-    call common.concatenateTextFiles as catR2 {
-        input:
-            fileList = select_first(library.notCombR2),
-            combinedFilePath = outputDir + "/notCombined_R2.fastq.gz",
-            unzip=true,
-            zip=true
-    }
-
-    call centrifuge.classify as centrifugeClassify {
-        input:
-            read1 = catR1.combinedFile,
-            read2 = catR2.combinedFile,
-            unpairedReads = catFrags.combinedFile,
-            outputDir = outputDir + "/centrifuge",
-            indexPrefix = indexPrefix
-    }
-
-    call centrifuge.kreport as centrifugeKreport {
-        input:
-            centrifugeOut=centrifugeClassify.classifiedReads,
-            inputIsCompressed=true,
-            indexPrefix=indexPrefix
-    }
-}}
+}

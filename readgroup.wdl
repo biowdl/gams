@@ -37,7 +37,7 @@ workflow readgroup {
             sample = sampleId,
             library = libraryId,
             readgroup = readgroupId,
-            tsvOutputPath = outputDir + "/" +readgroupId + ".config.tsv",
+            tsvOutputPath = outputDir + "/" + readgroupId + ".config.tsv",
             keyFilePath = outputDir + "/" + readgroupId + ".config.keys"
     }
 
@@ -66,23 +66,21 @@ workflow readgroup {
             outdirPath = outputDir + "/QC_processed/R2"
     }
 
-    if (combineReads){
+    if (combineReads == true) {
         call flash.flash as flash {
             input:
                 inputR1 = qcRaw.read1afterQC,
                 inputR2 = select_first([qcRaw.read2afterQC]),
                 outdirPath = outputDir + "/flash"
             }
-
-        output {
-            File extendedFrags = outputDir + "/flash/flash.extendedFrags.fastq.gz"
-            File notCombinedR1 = outputDir + "/flash/flash.notCombined_1.fastq.gz"
-            File notCombinedR2 = outputDir + "/flash/flash.notCombined_2.fastq.gz"
-        }
     }
 
     output {
+        File? extendedFrags = flash.extendedFrags
+        File? notCombinedR1 = flash.notCombined1
+        File? notCombinedR2 = flash.notCombined2
         File cleanR1 = qcRaw.read1afterQC
-        File cleanR2 = select_first([qcRaw.read2afterQC])
+        File? cleanR2 = qcRaw.read2afterQC
     }
 }
+

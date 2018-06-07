@@ -27,7 +27,6 @@ workflow library {
     String sampleId
     String libraryId
     String outputDir
-    Boolean combineReads
 
     # Get the readgroup configuration
     call biopet.SampleConfig as config {
@@ -40,9 +39,7 @@ workflow library {
 
         }
 
-
     # The jobs that are done per readgroup.
-    # Modify readgroup.wdl to change what is happening per readgroup
     scatter (readgroupId in read_lines(config.keysFile)) {
         if (readgroupId != "") {
             call readgroupWorkflow.readgroup as readgroup {
@@ -55,9 +52,13 @@ workflow library {
             }
         }
     }
+
     output {
-        Array[File] extFrags = select_all(readgroup.extendedFrags)
-        Array[File] notCombR1 = select_all(readgroup.notCombinedR1)
-        Array[File] notCombR2 = select_all(readgroup.notCombinedR2)
+        Array[File] libExtendedFrags = select_all(readgroup.extendedFrags)
+        Array[File] libNotCombinedR1 =  select_all(readgroup.notCombinedR1)
+        Array[File] libNotCombinedR2 = select_all(readgroup.notCombinedR2)
+        Array[File]+ libCleanR1 = select_all(readgroup.cleanR1)
+        Array[File] libCleanR2 = select_all(readgroup.cleanR2)
     }
 }
+

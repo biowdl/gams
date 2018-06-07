@@ -33,20 +33,19 @@ workflow pipeline {
     }
 
     # Do the jobs that should be executed per sample.
-    # Modify sample.wdl to change what is happening per sampleq
     scatter (sampleId in read_lines(config.keysFile)) {
         call sampleWorkflow.sample as sample {
             input:
                 sampleConfigs = sampleConfigFiles,
                 sampleId = sampleId,
-                outputDir = outputDir + "/sample_" + sampleId
-        }
+                outputDir = outputDir + "/samples/" + sampleId
+            }
     }
 
-    # Put the jobs that need to be done over the result of all samples
-    # below this line.
-
     output {
-        Array[String] samples = read_lines(config.keysFile)
+        Array[File]+ centrifugeOutputs = sample.centrifugeClassifications
+        Array[File]+ centrifugeReports = sample.centrifugeReport
+        Array[File]+ centrifugeKreports = sample.kreport
+        Array[File?]? centrifugeKreportsUnique = sample.kreportUnique
     }
 }
