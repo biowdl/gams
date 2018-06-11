@@ -15,17 +15,13 @@ Most of the calls require the activation of the relevant conda environment, so
 you will have to create them **beforehand**. The `requirements.yml` files 
 can be found in the `envs` directory.
 
-2. Some [biopet tools](https://github.com/biopet/tools):
-
-Links are provided to the released, pre-compiled jars. The latest versions are recommended.
-
+2. Some [biopet tools](https://github.com/biopet/tools). Latest versions recommended:
     1. [SampleConfig](https://github.com/biopet/sampleconfig/releases)
     2. [ExtractAdaptersFastqc](https://github.com/biopet/extractadaptersfastqc/releases)
   
 3. Since this is wdl you will also need cromwell for the execution of the (sub)-workflows, 
 which you can find [here](https://github.com/broadinstitute/cromwell/releases).
 
-4.  
 
 ## Running the pipeline
 
