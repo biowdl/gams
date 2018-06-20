@@ -27,7 +27,7 @@ workflow sample {
     Array[File] sampleConfigs
     String sampleId
     String outputDir
-    Boolean combineReads
+    Boolean? combineReads
     String indexPrefix
     Int? assignments = 5
 
@@ -68,11 +68,11 @@ workflow sample {
                                 then flatten(select_all(library.libExtendedFrags))
                                 else None,
 
-                read1 = if (combineReads == true)
+                read1 = if (select_first([combineReads, false]) == true)
                         then flatten(select_all(library.libNotCombinedR1))
                         else flatten(select_all(library.libCleanR1)),
 
-                read2 = if (combineReads == true)
+                read2 = if (select_first([combineReads, false]) == true)
                         then flatten(select_all(library.libNotCombinedR2))
                         else flatten(select_all(library.libCleanR2))
 

@@ -30,7 +30,7 @@ workflow readgroup {
     String libraryId
     String sampleId
     String outputDir
-    Boolean combineReads
+    Boolean? combineReads
 
     call biopet.SampleConfig as config {
         input:
@@ -79,7 +79,7 @@ workflow readgroup {
             outputDir = outputDir + "/post_QC"
     }
 
-    if (combineReads == true) {
+    if (select_first([combineReads, false]) == true) {
         call flash.flash as flash {
             input:
                 inputR1 = clipping.read1afterClipping,
