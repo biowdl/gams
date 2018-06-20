@@ -19,6 +19,9 @@
 # SOFTWARE.
 
 import "tasks/biopet.wdl" as biopet
+import "QC/QC.wdl" as QC
+import "tasks/fastqc.wdl" as fastqc
+import "tasks/flash.wdl" as flash
 
 workflow readgroup {
     Array[File] sampleConfigs
@@ -26,6 +29,7 @@ workflow readgroup {
     String libraryId
     String sampleId
     String outputDir
+    Boolean combineReads
 
     call biopet.SampleConfig as config {
         input:
@@ -33,13 +37,50 @@ workflow readgroup {
             sample = sampleId,
             library = libraryId,
             readgroup = readgroupId,
-            tsvOutputPath = readgroupId + ".config.tsv"
+            tsvOutputPath = outputDir + "/" + readgroupId + ".config.tsv",
+            keyFilePath = outputDir + "/" + readgroupId + ".config.keys"
+    }
+
+    Object configValues = if (defined(config.tsvOutput) && size(config.tsvOutput) > 0)
+        then read_map(config.tsvOutput)
+        else { "":"" }
+
+    call QC.QC as qcRaw {
+        input:
+            outputDir = outputDir + "/QC",
+            read1 = configValues.R1,
+            read2 = configValues.R2
+
+    }
+
+    # Call fastqc on the processed reads
+    call fastqc.fastqc as fastqcProcessedR1 {
+        input:
+            seqFile = qcRaw.read1afterQC,
+            outdirPath = outputDir + "/QC_processed/R1"
+    }
+
+    call fastqc.fastqc as fastqcProcessedR2 {
+        input:
+            seqFile = select_first([qcRaw.read2afterQC]),
+            outdirPath = outputDir + "/QC_processed/R2"
+    }
+
+    if (combineReads == true) {
+        call flash.flash as flash {
+            input:
+                inputR1 = qcRaw.read1afterQC,
+                inputR2 = select_first([qcRaw.read2afterQC]),
+                outdirPath = outputDir + "/flash"
+            }
     }
 
     output {
-        File inputR1 = config.values.R1
-        File inputR2 = config.values.R2
+        File? extendedFrags = flash.extendedFrags
+        File? notCombinedR1 = flash.notCombined1
+        File? notCombinedR2 = flash.notCombined2
+        File cleanR1 = qcRaw.read1afterQC
+        File? cleanR2 = qcRaw.read2afterQC
     }
-
 }
 

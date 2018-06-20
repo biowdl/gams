@@ -18,8 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import "readgroup.wdl" as readgroup
+import "readgroup.wdl" as readgroupWorkflow
 import "tasks/biopet.wdl" as biopet
+import "tasks/common.wdl" as common
 
 workflow library {
     Array[File] sampleConfigs
@@ -28,19 +29,20 @@ workflow library {
     String outputDir
 
     # Get the readgroup configuration
-    call biopet.SampleConfig as readgroupConfigs {
+    call biopet.SampleConfig as config {
         input:
             inputFiles = sampleConfigs,
             sample = sampleId,
             library = libraryId,
-            tsvOutputPath = libraryId + ".config.tsv"
-    }
+            tsvOutputPath = outputDir + "/" + libraryId + ".config.tsv",
+            keyFilePath = outputDir + "/" + libraryId + ".config.keys"
+
+        }
 
     # The jobs that are done per readgroup.
-    # Modify readgroup.wdl to change what is happening per readgroup
-    scatter (readgroupId in readgroupConfigs.keys) {
+    scatter (readgroupId in read_lines(config.keysFile)) {
         if (readgroupId != "") {
-            call readgroup.readgroup as readgroup {
+            call readgroupWorkflow.readgroup as readgroup {
                 input:
                     outputDir = outputDir + "/rg_" + readgroupId,
                     sampleConfigs = sampleConfigs,
@@ -51,10 +53,12 @@ workflow library {
         }
     }
 
-    # Add the jobs that are done per library and over the results of
-    # all the readgroups below this line.
-
     output {
-        Array[String] readgroups = readgroupConfigs.keys
+        Array[File] libExtendedFrags = select_all(readgroup.extendedFrags)
+        Array[File] libNotCombinedR1 =  select_all(readgroup.notCombinedR1)
+        Array[File] libNotCombinedR2 = select_all(readgroup.notCombinedR2)
+        Array[File]+ libCleanR1 = select_all(readgroup.cleanR1)
+        Array[File] libCleanR2 = select_all(readgroup.cleanR2)
     }
 }
+
