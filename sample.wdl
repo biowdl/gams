@@ -28,7 +28,7 @@ workflow sample {
     String sampleId
     String outputDir
     Boolean? combineReads
-    String indexPrefix
+    String centrifugeIndexPrefix
     Int? assignments = 5
 
     # Get the library configuration
@@ -61,7 +61,7 @@ workflow sample {
     call centrifuge.Classify as centrifugeClassify {
             input:
                 outputDir = outputDir + "/centrifuge",
-                indexPrefix = indexPrefix,
+                indexPrefix = centrifugeIndexPrefix,
                 assignments = assignments,
 
                 unpairedReads= if length(select_first(library.libExtendedFrags)) > 0
@@ -83,7 +83,7 @@ workflow sample {
         input:
             centrifugeOut = centrifugeClassify.classifiedReads,
             outputDir = outputDir + "/centrifuge",
-            indexPrefix = indexPrefix,
+            indexPrefix = centrifugeIndexPrefix,
             inputIsCompressed = true
 
     }
@@ -94,7 +94,7 @@ workflow sample {
             input:
                 centrifugeOut = centrifugeClassify.classifiedReads,
                 outputDir = outputDir + "/centrifuge",
-                indexPrefix = indexPrefix,
+                indexPrefix = centrifugeIndexPrefix,
                 inputIsCompressed = true,
                 prefix = "centrifuge_unique",
                 onlyUnique = true

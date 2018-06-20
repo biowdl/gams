@@ -21,9 +21,7 @@
 
 package biowdl.test
 
-import java.io.File
-
-import nl.biopet.utils.biowdl.fixtureFile
+import nl.biopet.utils.biowdl.fixtureDir
 import nl.biopet.utils.biowdl.references.TestReference
 import nl.biopet.utils.biowdl.samples.{Wgs1PairedEnd, Wgs2PairedEnd}
 
@@ -31,4 +29,7 @@ class GamsTest
     extends GamsSuccess
     with TestReference
     with Wgs1PairedEnd
-    with Wgs2PairedEnd {}
+    with Wgs2PairedEnd {
+  def centrifugeIndexPrefix: Option[String] =
+    Some(fixtureDir + "/gears/centrifuge_index/b+h+v")
+}

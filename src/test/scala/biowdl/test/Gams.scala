@@ -29,11 +29,14 @@ import nl.biopet.utils.ngs.vcf.getVcfIndexFile
 
 trait Gams extends MultisamplePipeline {
 
+  def centrifugeIndexPrefix: Option[String]
+
   override def inputs: Map[String, Any] =
     super.inputs ++
       Map(
         "pipeline.outputDir" -> outputDir.getAbsolutePath
-      )
+      ) ++ centrifugeIndexPrefix.map(
+      "pipeline.sample.centrifugeIndexPrefix" -> _)
 
   def startFile: File = new File("./pipeline.wdl")
 }
