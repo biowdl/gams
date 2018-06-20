@@ -24,7 +24,15 @@ package biowdl.test
 import java.io.File
 
 import nl.biopet.utils.biowdl.PipelineSuccess
+import nl.biopet.utils.biowdl.multisample.Sample
+import org.testng.annotations.Test
 
 trait GamsSuccess extends Gams with PipelineSuccess {
-  //TODO: add tests
+
+  @Test(dataProvider = "samples")
+  def testCentrifugeFile(sample: Sample): Unit = {
+    val centrifigeFile =
+      new File(sampleDir(sample), "centrifuge/centrifuge.out.gz")
+    centrifigeFile should exist
+  }
 }
