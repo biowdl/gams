@@ -19,7 +19,8 @@
 # SOFTWARE.
 
 import "tasks/biopet.wdl" as biopet
-import "QC/QC.wdl" as QC
+import "QC/QualityReport.wdl" as QualityReport
+import "QC/AdapterClipping.wdl" as AdapterClipping
 import "tasks/fastqc.wdl" as fastqc
 import "tasks/flash.wdl" as flash
 
@@ -45,12 +46,25 @@ workflow readgroup {
         then read_map(config.tsvOutput)
         else { "":"" }
 
-    call QC.QC as qcRaw {
+    call QualityReport.QualityReport as QreportR1 {
+        input:
+            read = configValues.R1,
+            outputDir = outputDir + "/QC"
+    }
+
+    call QualityReport.QualityReport as QreportR2 {
+        input:
+            read = configValues.R2,
+            outputDir = outputDir + "/QC"
+    }
+
+    call AdapterClipping.AdapterClipping as qcRaw {
         input:
             outputDir = outputDir + "/QC",
             read1 = configValues.R1,
-            read2 = configValues.R2
-
+            read2 = configValues.R2,
+            adapterListRead1 = QreportR1.adapters,
+            adapterListRead2 = QreportR2.adapters
     }
 
     # Call fastqc on the processed reads
