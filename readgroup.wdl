@@ -58,7 +58,7 @@ workflow readgroup {
             outputDir = outputDir + "/QC"
     }
 
-    call AdapterClipping.AdapterClipping as qcRaw {
+    call AdapterClipping.AdapterClipping as clipping {
         input:
             outputDir = outputDir + "/QC",
             read1 = configValues.R1,
@@ -67,24 +67,23 @@ workflow readgroup {
             adapterListRead2 = QreportR2.adapters
     }
 
-    # Call fastqc on the processed reads
-    call fastqc.fastqc as fastqcProcessedR1 {
+    call QualityReport.QualityReport as QreportR1 {
         input:
-            seqFile = qcRaw.read1afterQC,
-            outdirPath = outputDir + "/QC_processed/R1"
+            read = clipping.read1afterClipping,
+            outputDir = outputDir + "/QC"
     }
 
-    call fastqc.fastqc as fastqcProcessedR2 {
+    call QualityReport.QualityReport as QreportR2 {
         input:
-            seqFile = select_first([qcRaw.read2afterQC]),
-            outdirPath = outputDir + "/QC_processed/R2"
+            read = select_first([clipping.read2afterClipping]),
+            outputDir = outputDir + "/post_QC"
     }
 
     if (combineReads == true) {
         call flash.flash as flash {
             input:
-                inputR1 = qcRaw.read1afterQC,
-                inputR2 = select_first([qcRaw.read2afterQC]),
+                inputR1 = clipping.read1afterClipping,
+                inputR2 = select_first([clipping.read2afterClipping]),
                 outdirPath = outputDir + "/flash"
             }
     }
@@ -93,8 +92,8 @@ workflow readgroup {
         File? extendedFrags = flash.extendedFrags
         File? notCombinedR1 = flash.notCombined1
         File? notCombinedR2 = flash.notCombined2
-        File cleanR1 = qcRaw.read1afterQC
-        File? cleanR2 = qcRaw.read2afterQC
+        File cleanR1 = clipping.read1afterClipping
+        File? cleanR2 = clipping.read2afterClipping
     }
 }
 
