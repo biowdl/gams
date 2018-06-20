@@ -67,13 +67,13 @@ workflow readgroup {
             adapterListRead2 = QreportR2.adapters
     }
 
-    call QualityReport.QualityReport as QreportR1 {
+    call QualityReport.QualityReport as PostQreportR1 {
         input:
             read = clipping.read1afterClipping,
             outputDir = outputDir + "/QC"
     }
 
-    call QualityReport.QualityReport as QreportR2 {
+    call QualityReport.QualityReport as PostQreportR2 {
         input:
             read = select_first([clipping.read2afterClipping]),
             outputDir = outputDir + "/post_QC"
