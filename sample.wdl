@@ -27,8 +27,8 @@ workflow sample {
     Array[File] sampleConfigs
     String sampleId
     String outputDir
-    Boolean combineReads
-    String indexPrefix
+    Boolean? combineReads
+    String centrifugeIndexPrefix
     Int? assignments = 5
 
     # Get the library configuration
@@ -61,18 +61,18 @@ workflow sample {
     call centrifuge.Classify as centrifugeClassify {
             input:
                 outputDir = outputDir + "/centrifuge",
-                indexPrefix = indexPrefix,
+                indexPrefix = centrifugeIndexPrefix,
                 assignments = assignments,
 
                 unpairedReads= if length(select_first(library.libExtendedFrags)) > 0
                                 then flatten(select_all(library.libExtendedFrags))
                                 else None,
 
-                read1 = if (combineReads == true)
+                read1 = if (select_first([combineReads, false]) == true)
                         then flatten(select_all(library.libNotCombinedR1))
                         else flatten(select_all(library.libCleanR1)),
 
-                read2 = if (combineReads == true)
+                read2 = if (select_first([combineReads, false]) == true)
                         then flatten(select_all(library.libNotCombinedR2))
                         else flatten(select_all(library.libCleanR2))
 
@@ -83,7 +83,7 @@ workflow sample {
         input:
             centrifugeOut = centrifugeClassify.classifiedReads,
             outputDir = outputDir + "/centrifuge",
-            indexPrefix = indexPrefix,
+            indexPrefix = centrifugeIndexPrefix,
             inputIsCompressed = true
 
     }
@@ -94,7 +94,7 @@ workflow sample {
             input:
                 centrifugeOut = centrifugeClassify.classifiedReads,
                 outputDir = outputDir + "/centrifuge",
-                indexPrefix = indexPrefix,
+                indexPrefix = centrifugeIndexPrefix,
                 inputIsCompressed = true,
                 prefix = "centrifuge_unique",
                 onlyUnique = true

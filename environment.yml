@@ -7,6 +7,8 @@ channels:
 dependencies:
   - biopet-extractadaptersfastqc==0.2
   - biopet-sampleconfig==0.1
+  - biopet-seqstat==0.1
+  - biopet-validatefastq==0.1.1
   - cutadapt==1.16
   - fastqc==0.11.7
   - flash==1.2.11
