@@ -68,7 +68,7 @@ This pipeline will produce a number of directories and files:
 - **samples**: Contains a directory per sample.
   - **&lt;sample>**: Contains a folder 'centrifuge', which contains the
   centrifuge output. Also contains a directory per library.
-    - **<&lt;library>**: Contains a directory per readgroup.
+    - **&lt;library>**: Contains a directory per readgroup.
       - **&lt;readgroup>**: Contains QC metrics and preprocessed FastQ files.
 
 ## Contact
