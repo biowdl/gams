@@ -10,7 +10,7 @@ to an option or argument for a specific tool and should be self-explanatory
 when compared to the relevant tool's documentation.
 
 If something is unclear or an option/argument is unavailable, please file an
-[issue](https://github.com/biowdl/rna-seq/issues).
+[issue](https://github.com/biowdl/gams/issues).
 
 ## The input JSON
 
