@@ -25,7 +25,7 @@ import "tasks/biopet.wdl" as biopet
 import "tasks/common.wdl" as common
 import "structs.wdl" as structs
 
-workflow library {
+workflow Library {
     input {
         Sample sample
         Library library
@@ -34,12 +34,12 @@ workflow library {
     }
 
     scatter (rg in library.readgroups) {
-        call readgroup.Readgroup as readgroup {
+        call readgroupWorkflow.Readgroup as readgroup {
             input:
                 readgroupDir = libraryDir + "/rg_" + rg.id,
                 readgroup = rg,
-                libraryId = library.id,
-                sampleId = sample.id,
+                library = library,
+                sample = sample,
                 gamsInputs = gamsInputs
         }
     }
@@ -48,7 +48,7 @@ workflow library {
         Array[File] libExtendedFrags = select_all(readgroup.extendedFrags)
         Array[File] libNotCombinedR1 =  select_all(readgroup.notCombinedR1)
         Array[File] libNotCombinedR2 = select_all(readgroup.notCombinedR2)
-        Array[File]+ libCleanR1 = select_all(readgroup.cleanR1)
+        Array[File]+ libCleanR1 = readgroup.cleanR1
         Array[File] libCleanR2 = select_all(readgroup.cleanR2)
     }
 }

@@ -26,7 +26,7 @@ import "tasks/common.wdl" as common
 import "tasks/centrifuge.wdl" as centrifuge
 import "structs.wdl" as structs
 
-workflow sample {
+workflow Sample {
 
     input {
         Sample sample
@@ -39,7 +39,7 @@ workflow sample {
             input:
                 libraryDir = sampleDir + "/lib_" + lb.id,
                 library = lb,
-                sampleId = sample.id,
+                sample = sample,
                 gamsInputs = gamsInputs
         }
     }
@@ -48,24 +48,16 @@ workflow sample {
     # The QC'ed pairs are then selected as input for centrifuge
     #Array[File]? None # Replace this as soon as there is a literal None
 
+    Boolean combine = select_first([gamsInputs.combineReads, false])
+
     call centrifuge.Classify as centrifugeClassify {
             input:
                 outputDir = sampleDir + "/centrifuge",
                 indexPrefix = gamsInputs.centrifugeIndexPrefix,
                 assignments = gamsInputs.assignments,
-
-                unpairedReads= if length(select_first(library.libExtendedFrags)) > 0
-                                then flatten(select_all(library.libExtendedFrags))
-                                else None,
-
-                read1 = if (select_first([gamsInputs.ombineReads, false]) == true)
-                        then flatten(select_all(library.libNotCombinedR1))
-                        else flatten(select_all(library.libCleanR1)),
-
-                read2 = if (select_first([gamsInputs.combineReads, false]) == true)
-                        then flatten(select_all(library.libNotCombinedR2))
-                        else flatten(select_all(library.libCleanR2))
-
+                unpairedReads = if (combine == true) then flatten(library.libExtendedFrags) else [],
+                read1 = if (combine == true) then flatten(library.libNotCombinedR1) else flatten(library.libCleanR1),
+                read2 = if (combine == true) then flatten(library.libNotCombinedR2) else flatten(library.libCleanR2)
             }
 
     # Generate the k-report

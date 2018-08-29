@@ -27,11 +27,11 @@ import "tasks/fastqc.wdl" as fastqc
 import "tasks/flash.wdl" as flash
 import "structs.wdl" as structs
 
-workflow readgroup {
+workflow Readgroup {
     input {
         Readgroup readgroup
         Library library
-        Sample smaple
+        Sample sample
         String readgroupDir
         GamsInputs gamsInputs
     }
