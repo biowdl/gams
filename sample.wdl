@@ -51,14 +51,14 @@ workflow Sample {
     Boolean combine = select_first([gamsInputs.combineReads, false])
 
     call centrifuge.Classify as centrifugeClassify {
-            input:
-                outputDir = sampleDir + "/centrifuge",
-                indexPrefix = gamsInputs.centrifugeIndexPrefix,
-                assignments = gamsInputs.assignments,
-                unpairedReads = if (combine == true) then flatten(library.libExtendedFrags) else [],
-                read1 = if (combine == true) then flatten(library.libNotCombinedR1) else flatten(library.libCleanR1),
-                read2 = if (combine == true) then flatten(library.libNotCombinedR2) else flatten(library.libCleanR2)
-            }
+        input:
+            outputDir = sampleDir + "/centrifuge",
+            indexPrefix = gamsInputs.centrifugeIndexPrefix,
+            assignments = gamsInputs.assignments,
+            unpairedReads = if (combine == true) then flatten(library.libExtendedFrags) else [],
+            read1 = if (combine == true) then flatten(library.libNotCombinedR1) else flatten(library.libCleanR1),
+            read2 = if (combine == true) then flatten(library.libNotCombinedR2) else flatten(library.libCleanR2)
+    }
 
     # Generate the k-report
     call centrifuge.Kreport as centrifugeKreport {
