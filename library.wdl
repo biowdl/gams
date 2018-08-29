@@ -21,35 +21,24 @@
 import "readgroup.wdl" as readgroupWorkflow
 import "tasks/biopet.wdl" as biopet
 import "tasks/common.wdl" as common
+import "structs.wdl" as structs
 
 workflow library {
-    Array[File] sampleConfigs
-    String sampleId
-    String libraryId
-    String outputDir
+    input {
+        Sample sample
+        Library library
+        String libraryDir
+        GamsInputs gamsInputs
+    }
 
-    # Get the readgroup configuration
-    call biopet.SampleConfig as config {
-        input:
-            inputFiles = sampleConfigs,
-            sample = sampleId,
-            library = libraryId,
-            tsvOutputPath = outputDir + "/" + libraryId + ".config.tsv",
-            keyFilePath = outputDir + "/" + libraryId + ".config.keys"
-
-        }
-
-    # The jobs that are done per readgroup.
-    scatter (readgroupId in read_lines(config.keysFile)) {
-        if (readgroupId != "") {
-            call readgroupWorkflow.readgroup as readgroup {
-                input:
-                    outputDir = outputDir + "/rg_" + readgroupId,
-                    sampleConfigs = sampleConfigs,
-                    readgroupId = readgroupId,
-                    libraryId = libraryId,
-                    sampleId = sampleId
-            }
+    scatter (rg in library.readgroups) {
+        call readgroup.Readgroup as readgroup {
+            input:
+                readgroupDir = libraryDir + "/rg_" + rg.id,
+                readgroup = rg,
+                libraryId = library.id,
+                sampleId = sample.id,
+                gamsInputs = gamsInputs
         }
     }
 

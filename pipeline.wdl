@@ -20,26 +20,31 @@
 
 import "sample.wdl" as sampleWorkflow
 import "tasks/biopet.wdl" as biopet
+import "structs.wdl" as structs
 
 workflow pipeline {
-    Array[File] sampleConfigFiles
-    String outputDir
-
-    #  Reading the samples from the sample config files
-    call biopet.SampleConfig as config {
-        input:
-            inputFiles = sampleConfigFiles,
-            keyFilePath = outputDir + "/config.keys"
+    input {
+        Array[File] sampleConfigFiles
+        String outputDir
+        GamsInputs gamsInputs
     }
 
-    # Do the jobs that should be executed per sample.
-    scatter (sampleId in read_lines(config.keysFile)) {
-        call sampleWorkflow.sample as sample {
+    call biopet.SampleConfigCromwellArrays as configFile {
+        input:
+            inputFiles = sampleConfigFiles,
+            outputPath = outputDir + "/samples.json"
+    }
+
+     Root config = read_json(configFile.outputFile)
+
+    # Running sample subworkflow
+    scatter (sm in config.samples) {
+        call sampleWorkflow.Sample as sample {
             input:
-                sampleConfigs = sampleConfigFiles,
-                sampleId = sampleId,
-                outputDir = outputDir + "/samples/" + sampleId
-            }
+                sampleDir = outputDir + "/samples/" + sm.id,
+                sample = sm,
+                gamsInputs = gamsInputs
+        }
     }
 
     output {
