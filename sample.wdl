@@ -71,16 +71,14 @@ workflow Sample {
     }
 
     # Run the unique kreport generation when the no. of classifications is other than 1
-    if (gamsInputs.assignments != 1) {
-        call centrifuge.Kreport as centrifugeKreportUnique {
-            input:
-                centrifugeOut = centrifugeClassify.classifiedReads,
-                outputDir = sampleDir + "/centrifuge",
-                indexPrefix = gamsInputs.centrifugeIndexPrefix,
-                inputIsCompressed = true,
-                prefix = "centrifuge_unique",
-                onlyUnique = true
-        }
+    call centrifuge.Kreport as centrifugeKreportUnique {
+        input:
+            centrifugeOut = centrifugeClassify.classifiedReads,
+            outputDir = sampleDir + "/centrifuge",
+            indexPrefix = gamsInputs.centrifugeIndexPrefix,
+            inputIsCompressed = true,
+            prefix = "centrifuge_unique",
+            onlyUnique = true
     }
 
     output {
