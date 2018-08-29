@@ -34,9 +34,11 @@ trait Gams extends MultisamplePipeline {
   override def inputs: Map[String, Any] =
     super.inputs ++
       Map(
-        "pipeline.outputDir" -> outputDir.getAbsolutePath
-      ) ++ centrifugeIndexPrefix.map(
-      "pipeline.sample.centrifugeIndexPrefix" -> _)
+        "pipeline.outputDir" -> outputDir.getAbsolutePath,
+        "pipeline.gamsInputs" -> centrifugeIndexPrefix
+          .map("centrifugeIndexPrefix" -> _)
+          .toMap
+      )
 
   def startFile: File = new File("./pipeline.wdl")
 }
