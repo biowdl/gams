@@ -19,26 +19,17 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package biowdl.test
+package biowdl.test.gams
 
-import java.io.File
+import nl.biopet.utils.biowdl.fixtureDir
+import nl.biopet.utils.biowdl.references.TestReference
+import nl.biopet.utils.biowdl.samples.{Wgs1PairedEnd, Wgs2PairedEnd}
 
-import nl.biopet.utils.biowdl.multisample.MultisamplePipeline
-import nl.biopet.utils.biowdl.references.Reference
-import nl.biopet.utils.ngs.vcf.getVcfIndexFile
-
-trait Gams extends MultisamplePipeline {
-
-  def centrifugeIndexPrefix: Option[String]
-
-  override def inputs: Map[String, Any] =
-    super.inputs ++
-      Map(
-        "pipeline.outputDir" -> outputDir.getAbsolutePath,
-        "pipeline.gamsInputs" -> centrifugeIndexPrefix
-          .map("centrifugeIndexPrefix" -> _)
-          .toMap
-      )
-
-  def startFile: File = new File("./pipeline.wdl")
+class GamsTest
+    extends GamsSuccess
+    with TestReference
+    with Wgs1PairedEnd
+    with Wgs2PairedEnd {
+  def centrifugeIndexPrefix: Option[String] =
+    Some(fixtureDir + "/gears/centrifuge_index/b+h+v")
 }
