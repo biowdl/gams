@@ -46,7 +46,7 @@ workflow sample {
 
     # This handles the absence of extended fragments when flash is not run
     # The QC'ed pairs are then selected as input for centrifuge
-    Array[File]? None # Replace this as soon as there is a literal None
+    #Array[File]? None # Replace this as soon as there is a literal None
 
     call centrifuge.Classify as centrifugeClassify {
             input:
@@ -97,7 +97,6 @@ workflow sample {
         File kreport = centrifugeKreport.kreport
         File? kreportUnique = centrifugeKreportUnique.kreport
     }
-
 
 }
 

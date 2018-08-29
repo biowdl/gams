@@ -70,7 +70,7 @@ workflow readgroup {
     }
 
     if (select_first([gamsInputs.combineReads, false]) == true) {
-        call flash.flash as flash {
+        call flash.Flash as flash {
             input:
                 inputR1 = clipping.read1afterClipping,
                 inputR2 = select_first([clipping.read2afterClipping]),
