@@ -42,10 +42,12 @@ workflow readgroup {
             outputDir = readgroupDir + "/QC"
     }
 
-    call QualityReport.QualityReport as QreportR2 {
-        input:
-            read = readgroup.R2,
-            outputDir = readgroupDir + "/QC"
+    if (defined(readgroup.R2)) {
+        call QualityReport.QualityReport as QreportR2 {
+            input:
+                read = select_first([readgroup.R2]),
+                outputDir = readgroupDir + "/QC"
+        }
     }
 
     call AdapterClipping.AdapterClipping as clipping {
