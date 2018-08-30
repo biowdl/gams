@@ -12,4 +12,4 @@ dependencies:
   - cutadapt==1.16
   - fastqc==0.11.7
   - flash==1.2.11
-  - centrifuge==1.0.3
+  - centrifuge==1.0.4_beta
