@@ -53,6 +53,5 @@ workflow pipeline {
         Array[File]+ centrifugeOutputs = sample.centrifugeClassifications
         Array[File]+ centrifugeReports = sample.centrifugeReport
         Array[File]+ centrifugeKreports = sample.kreport
-        Array[File?]? centrifugeKreportsUnique = sample.kreportUnique
     }
 }
