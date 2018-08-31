@@ -55,9 +55,9 @@ workflow Sample {
             outputDir = sampleDir + "/centrifuge",
             indexPrefix = gamsInputs.centrifugeIndexPrefix,
             assignments = gamsInputs.assignments,
-            unpairedReads = if (combine == true) then flatten(library.libExtendedFrags) else [],
-            read1 = if (combine == true) then flatten(library.libNotCombinedR1) else flatten(library.libCleanR1),
-            read2 = if (combine == true) then flatten(library.libNotCombinedR2) else flatten(library.libCleanR2)
+            unpairedReads = if (combine) then flatten(library.libExtendedFrags) else [],
+            read1 = if (combine) then flatten(library.libNotCombinedR1) else flatten(library.libCleanR1),
+            read2 = if (combine) then flatten(library.libNotCombinedR2) else flatten(library.libCleanR2)
     }
 
     # Generate the k-report
