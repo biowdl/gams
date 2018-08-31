@@ -61,19 +61,20 @@ workflow Sample {
     }
 
     # Generate the k-report
-    call centrifuge.Kreport as centrifugeKreport {
-        input:
-            centrifugeOut = centrifugeClassify.classifiedReads,
-            outputDir = sampleDir + "/centrifuge",
-            indexPrefix = gamsInputs.centrifugeIndexPrefix,
-            inputIsCompressed = true
-
-    }
+    # FIXME: Disabled kreport because of bug in centrifuge
+#    call centrifuge.Kreport as centrifugeKreport {
+#        input:
+#            centrifugeOut = centrifugeClassify.classifiedReads,
+#            outputDir = sampleDir + "/centrifuge",
+#            indexPrefix = gamsInputs.centrifugeIndexPrefix,
+#            inputIsCompressed = true
+#
+#    }
 
     output {
         File centrifugeClassifications = centrifugeClassify.classifiedReads
         File centrifugeReport = centrifugeClassify.reportFile
-        File kreport = centrifugeKreport.kreport
+#        File kreport = centrifugeKreport.kreport
     }
 
 }
