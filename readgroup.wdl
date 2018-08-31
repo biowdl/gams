@@ -1,3 +1,5 @@
+version 1.0
+
 # Copyright (c) 2018 Sequencing Analysis Support Core - Leiden University Medical Center
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,46 +25,36 @@ import "QC/QualityReport.wdl" as QualityReport
 import "QC/AdapterClipping.wdl" as AdapterClipping
 import "tasks/fastqc.wdl" as fastqc
 import "tasks/flash.wdl" as flash
+import "structs.wdl" as structs
 
-workflow readgroup {
-    Array[File] sampleConfigs
-    String readgroupId
-    String libraryId
-    String sampleId
-    String outputDir
-    Boolean? combineReads
-
-    call biopet.SampleConfig as config {
-        input:
-            inputFiles = sampleConfigs,
-            sample = sampleId,
-            library = libraryId,
-            readgroup = readgroupId,
-            tsvOutputPath = outputDir + "/" + readgroupId + ".config.tsv",
-            keyFilePath = outputDir + "/" + readgroupId + ".config.keys"
+workflow Readgroup {
+    input {
+        Readgroup readgroup
+        Library library
+        Sample sample
+        String readgroupDir
+        GamsInputs gamsInputs
     }
-
-    Object configValues = if (defined(config.tsvOutput) && size(config.tsvOutput) > 0)
-        then read_map(config.tsvOutput)
-        else { "":"" }
 
     call QualityReport.QualityReport as QreportR1 {
         input:
-            read = configValues.R1,
-            outputDir = outputDir + "/QC"
+            read = readgroup.R1,
+            outputDir = readgroupDir + "/QC"
     }
 
-    call QualityReport.QualityReport as QreportR2 {
-        input:
-            read = configValues.R2,
-            outputDir = outputDir + "/QC"
+    if (defined(readgroup.R2)) {
+        call QualityReport.QualityReport as QreportR2 {
+            input:
+                read = select_first([readgroup.R2]),
+                outputDir = readgroupDir + "/QC"
+        }
     }
 
     call AdapterClipping.AdapterClipping as clipping {
         input:
-            outputDir = outputDir + "/QC",
-            read1 = configValues.R1,
-            read2 = configValues.R2,
+            outputDir = readgroupDir + "/QC",
+            read1 = readgroup.R1,
+            read2 = readgroup.R2,
             adapterListRead1 = QreportR1.adapters,
             adapterListRead2 = QreportR2.adapters
     }
@@ -70,21 +62,21 @@ workflow readgroup {
     call QualityReport.QualityReport as PostQreportR1 {
         input:
             read = clipping.read1afterClipping,
-            outputDir = outputDir + "/QC"
+            outputDir = readgroupDir + "/QC"
     }
 
     call QualityReport.QualityReport as PostQreportR2 {
         input:
             read = select_first([clipping.read2afterClipping]),
-            outputDir = outputDir + "/post_QC"
+            outputDir = readgroupDir + "/post_QC"
     }
 
-    if (select_first([combineReads, false]) == true) {
-        call flash.flash as flash {
+    if (select_first([gamsInputs.combineReads, false])) {
+        call flash.Flash as flash {
             input:
                 inputR1 = clipping.read1afterClipping,
                 inputR2 = select_first([clipping.read2afterClipping]),
-                outdirPath = outputDir + "/flash"
+                outdirPath = readgroupDir + "/flash"
             }
     }
 

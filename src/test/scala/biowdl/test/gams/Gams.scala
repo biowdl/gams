@@ -19,20 +19,26 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package biowdl.test
+package biowdl.test.gams
 
 import java.io.File
 
-import nl.biopet.utils.biowdl.PipelineSuccess
-import nl.biopet.utils.biowdl.multisample.Sample
-import org.testng.annotations.Test
+import nl.biopet.utils.biowdl.multisample.MultisamplePipeline
+import nl.biopet.utils.biowdl.references.Reference
+import nl.biopet.utils.ngs.vcf.getVcfIndexFile
 
-trait GamsSuccess extends Gams with PipelineSuccess {
+trait Gams extends MultisamplePipeline {
 
-  @Test(dataProvider = "samples")
-  def testCentrifugeFile(sample: Sample): Unit = {
-    val centrifigeFile =
-      new File(sampleDir(sample), "centrifuge/centrifuge.out.gz")
-    centrifigeFile should exist
-  }
+  def centrifugeIndexPrefix: Option[String]
+
+  override def inputs: Map[String, Any] =
+    super.inputs ++
+      Map(
+        "pipeline.outputDir" -> outputDir.getAbsolutePath,
+        "pipeline.gamsInputs" -> centrifugeIndexPrefix
+          .map("centrifugeIndexPrefix" -> _)
+          .toMap
+      )
+
+  def startFile: File = new File("./pipeline.wdl")
 }

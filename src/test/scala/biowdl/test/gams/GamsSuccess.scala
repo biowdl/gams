@@ -19,17 +19,20 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package biowdl.test
+package biowdl.test.gams
 
-import nl.biopet.utils.biowdl.fixtureDir
-import nl.biopet.utils.biowdl.references.TestReference
-import nl.biopet.utils.biowdl.samples.{Wgs1PairedEnd, Wgs2PairedEnd}
+import java.io.File
 
-class GamsTest
-    extends GamsSuccess
-    with TestReference
-    with Wgs1PairedEnd
-    with Wgs2PairedEnd {
-  def centrifugeIndexPrefix: Option[String] =
-    Some(fixtureDir + "/gears/centrifuge_index/b+h+v")
+import nl.biopet.utils.biowdl.PipelineSuccess
+import nl.biopet.utils.biowdl.multisample.Sample
+import org.testng.annotations.Test
+
+trait GamsSuccess extends Gams with PipelineSuccess {
+
+  @Test(dataProvider = "samples")
+  def testCentrifugeFile(sample: Sample): Unit = {
+    val centrifigeFile =
+      new File(sampleDir(sample), "centrifuge/centrifuge.out.gz")
+    centrifigeFile should exist
+  }
 }
