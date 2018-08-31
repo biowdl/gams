@@ -52,6 +52,6 @@ workflow pipeline {
     output {
         Array[File]+ centrifugeOutputs = sample.centrifugeClassifications
         Array[File]+ centrifugeReports = sample.centrifugeReport
-#        Array[File]+ centrifugeKreports = sample.kreport
+        Array[File]+ centrifugeKreports = sample.kreport
     }
 }
