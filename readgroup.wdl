@@ -71,7 +71,7 @@ workflow Readgroup {
             outputDir = readgroupDir + "/post_QC"
     }
 
-    if (select_first([gamsInputs.combineReads, false]) == true) {
+    if (select_first([gamsInputs.combineReads, false])) {
         call flash.Flash as flash {
             input:
                 inputR1 = clipping.read1afterClipping,
