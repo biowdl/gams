@@ -24,6 +24,7 @@ import "tasks/biopet.wdl" as biopet
 import "QC/QC.wdl" as qcWorkflow
 import "tasks/fastqc.wdl" as fastqc
 import "tasks/flash.wdl" as flash
+import "tasks/common.wdl" as common
 import "structs.wdl" as structs
 
 workflow Readgroup {
