@@ -21,8 +21,7 @@ version 1.0
 # SOFTWARE.
 
 import "tasks/biopet.wdl" as biopet
-import "QC/QualityReport.wdl" as QualityReport
-import "QC/AdapterClipping.wdl" as AdapterClipping
+import "QC/QC.wdl" as qcWorkflow
 import "tasks/fastqc.wdl" as fastqc
 import "tasks/flash.wdl" as flash
 import "structs.wdl" as structs
@@ -36,46 +35,42 @@ workflow Readgroup {
         GamsInputs gamsInputs
     }
 
-    call QualityReport.QualityReport as QreportR1 {
-        input:
-            read = readgroup.R1,
-            outputDir = readgroupDir + "/QC"
-    }
+    # FIXME: workaround for namepace issue in cromwell
+    String sampleId = sample.id
+    String libraryId = library.id
+    String readgroupId = readgroup.id
 
-    if (defined(readgroup.R2)) {
-        call QualityReport.QualityReport as QreportR2 {
+    if (defined(readgroup.R1_md5)) {
+        call common.CheckFileMD5 as md5CheckR1 {
             input:
-                read = select_first([readgroup.R2]),
-                outputDir = readgroupDir + "/QC"
+                file = readgroup.R1,
+                MD5sum = select_first([readgroup.R1_md5])
         }
     }
 
-    call AdapterClipping.AdapterClipping as clipping {
+    if (defined(readgroup.R2)) {
+        call common.CheckFileMD5 as md5CheckR2 {
+            input:
+                file = select_first([readgroup.R2]),
+                MD5sum = select_first([readgroup.R2_md5])
+        }
+    }
+
+    call qcWorkflow.QC as qc {
         input:
-            outputDir = readgroupDir + "/QC",
+            outputDir = readgroupDir,
             read1 = readgroup.R1,
             read2 = readgroup.R2,
-            adapterListRead1 = QreportR1.adapters,
-            adapterListRead2 = QreportR2.adapters
-    }
-
-    call QualityReport.QualityReport as PostQreportR1 {
-        input:
-            read = clipping.read1afterClipping,
-            outputDir = readgroupDir + "/QC"
-    }
-
-    call QualityReport.QualityReport as PostQreportR2 {
-        input:
-            read = select_first([clipping.read2afterClipping]),
-            outputDir = readgroupDir + "/post_QC"
+            sample = sampleId,
+            library = libraryId,
+            readgroup = readgroupId
     }
 
     if (select_first([gamsInputs.combineReads, false])) {
         call flash.Flash as flash {
             input:
-                inputR1 = clipping.read1afterClipping,
-                inputR2 = select_first([clipping.read2afterClipping]),
+                inputR1 = qc.read1afterQC,
+                inputR2 = select_first([qc.read2afterQC]),
                 outdirPath = readgroupDir + "/flash"
             }
     }
@@ -84,8 +79,8 @@ workflow Readgroup {
         File? extendedFrags = flash.extendedFrags
         File? notCombinedR1 = flash.notCombined1
         File? notCombinedR2 = flash.notCombined2
-        File cleanR1 = clipping.read1afterClipping
-        File? cleanR2 = clipping.read2afterClipping
+        File cleanR1 = qc.read1afterQC
+        File? cleanR2 = qc.read2afterQC
     }
 }
 
