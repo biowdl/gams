@@ -20,7 +20,7 @@ version 1.0
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import "tasks/biopet.wdl" as biopet
+import "tasks/biopet/biopet.wdl" as biopet
 import "QC/QC.wdl" as qcWorkflow
 import "tasks/fastqc.wdl" as fastqc
 import "tasks/flash.wdl" as flash
@@ -41,27 +41,10 @@ workflow Readgroup {
     String libraryId = library.id
     String readgroupId = readgroup.id
 
-    if (defined(readgroup.R1_md5)) {
-        call common.CheckFileMD5 as md5CheckR1 {
-            input:
-                file = readgroup.R1,
-                MD5sum = select_first([readgroup.R1_md5])
-        }
-    }
-
-    if (defined(readgroup.R2_md5) && defined(readgroup.R2)) {
-        call common.CheckFileMD5 as md5CheckR2 {
-            input:
-                file = select_first([readgroup.R2]),
-                MD5sum = select_first([readgroup.R2_md5])
-        }
-    }
-
     call qcWorkflow.QC as qc {
         input:
             outputDir = readgroupDir,
-            read1 = readgroup.R1,
-            read2 = readgroup.R2,
+            reads = readgroup.reads,
             sample = sampleId,
             library = libraryId,
             readgroup = readgroupId
@@ -70,18 +53,15 @@ workflow Readgroup {
     if (select_first([gamsInputs.combineReads, false])) {
         call flash.Flash as flash {
             input:
-                inputR1 = qc.read1afterQC,
-                inputR2 = select_first([qc.read2afterQC]),
+                inputFastq = qc.readsAfterQC,
                 outdirPath = readgroupDir + "/flash"
             }
     }
 
     output {
         File? extendedFrags = flash.extendedFrags
-        File? notCombinedR1 = flash.notCombined1
-        File? notCombinedR2 = flash.notCombined2
-        File cleanR1 = qc.read1afterQC
-        File? cleanR2 = qc.read2afterQC
+        FastqPair? notCombined = flash.notCombined
+        FastqPair cleanReads = qc.readsAfterQC
     }
 }
 
