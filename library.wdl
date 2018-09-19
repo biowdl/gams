@@ -21,7 +21,7 @@ version 1.0
 # SOFTWARE.
 
 import "readgroup.wdl" as readgroupWorkflow
-import "tasks/biopet.wdl" as biopet
+import "tasks/biopet/biopet.wdl" as biopet
 import "tasks/common.wdl" as common
 import "structs.wdl" as structs
 
@@ -46,10 +46,8 @@ workflow Library {
 
     output {
         Array[File] libExtendedFrags = select_all(readgroup.extendedFrags)
-        Array[File] libNotCombinedR1 =  select_all(readgroup.notCombinedR1)
-        Array[File] libNotCombinedR2 = select_all(readgroup.notCombinedR2)
-        Array[File]+ libCleanR1 = readgroup.cleanR1
-        Array[File] libCleanR2 = select_all(readgroup.cleanR2)
+        Array[FastqPair] libNotCombined =  select_all(readgroup.notCombined)
+        Array[FastqPair]+ libCleanReads = readgroup.cleanReads
     }
 }
 

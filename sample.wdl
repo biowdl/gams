@@ -21,7 +21,7 @@ version 1.0
 # SOFTWARE.
 
 import "library.wdl" as libraryWorkflow
-import "tasks/biopet.wdl" as biopet
+import "tasks/biopet/biopet.wdl" as biopet
 import "tasks/common.wdl" as common
 import "tasks/centrifuge.wdl" as centrifuge
 import "structs.wdl" as structs
@@ -34,6 +34,8 @@ workflow Sample {
         GamsInputs gamsInputs
     }
 
+    Boolean combine = select_first([gamsInputs.combineReads, false])
+
     scatter (lb in sample.libraries) {
         call libraryWorkflow.Library as library {
             input:
@@ -42,13 +44,18 @@ workflow Sample {
                 sample = sample,
                 gamsInputs = gamsInputs
         }
+
+        Array[FastqPair] reads = if (combine) then library.libNotCombined else library.libCleanReads
     }
 
     # This handles the absence of extended fragments when flash is not run
     # The QC'ed pairs are then selected as input for centrifuge
     #Array[File]? None # Replace this as soon as there is a literal None
 
-    Boolean combine = select_first([gamsInputs.combineReads, false])
+    scatter (r in flatten(reads)) {
+        File R1 = r.R1
+        File? R2 = r.R2
+    }
 
     call centrifuge.Classify as centrifugeClassify {
         input:
@@ -56,8 +63,8 @@ workflow Sample {
             indexPrefix = gamsInputs.centrifugeIndexPrefix,
             assignments = gamsInputs.assignments,
             unpairedReads = if (combine) then flatten(library.libExtendedFrags) else [],
-            read1 = if (combine) then flatten(library.libNotCombinedR1) else flatten(library.libCleanR1),
-            read2 = if (combine) then flatten(library.libNotCombinedR2) else flatten(library.libCleanR2)
+            read1 = R1,
+            read2 = if (length(select_all(R2)) > 0) then select_all(R2) else []
     }
 
     # Generate the k-report
