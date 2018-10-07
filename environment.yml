@@ -1,4 +1,4 @@
-name: multsample
+name: gams
 channels:
   - bioconda
   - conda-forge
